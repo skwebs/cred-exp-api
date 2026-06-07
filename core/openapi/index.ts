@@ -79,6 +79,15 @@ export const openApiSpec = {
         responses: { 201: { description: 'Account created' } },
       },
     },
+    '/accounts/available-for-card': {
+      get: {
+        tags: ['Accounts'],
+        summary: 'List accounts available for credit card link',
+        description: 'Returns accounts of type "credit_card" that are not yet linked to any credit card detail.',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'List of available accounts' } },
+      },
+    },
     '/cards': {
       get: {
         tags: ['Credit Cards'],
@@ -93,7 +102,21 @@ export const openApiSpec = {
         requestBody: {
           content: { 'application/json': { schema: { $ref: '#/components/schemas/CardRequest' } } },
         },
-        responses: { 201: { description: 'Card created' } },
+        responses: { 
+          201: { description: 'Card created' },
+          400: { 
+            description: 'Validation failed or invalid account type',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+          },
+          404: { 
+            description: 'Account not found',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+          },
+          409: { 
+            description: 'Credit card already exists for this account',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+          }
+        },
       },
     },
     '/transactions': {
@@ -238,6 +261,20 @@ export const openApiSpec = {
           billingCycleId: { type: 'string', format: 'uuid' },
           amount: { type: 'number' },
           transactionDatetime: { type: 'string', format: 'date-time' },
+        },
+      },
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: false },
+          message: { type: 'string' },
+          errors: {
+            type: 'object',
+            additionalProperties: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
         },
       },
     },

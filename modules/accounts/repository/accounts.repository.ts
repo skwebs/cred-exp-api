@@ -54,4 +54,27 @@ export class AccountsRepository {
       .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
       .returning();
   }
-}
+
+  async findAvailableForCard(userId: string) {
+    const { creditCards } = await import('@/lib/database/schema');
+
+    return await db
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        type: accounts.type,
+        balance: accounts.balance,
+        currency: accounts.currency,
+      })
+      .from(accounts)
+      .leftJoin(creditCards, eq(accounts.id, creditCards.accountId))
+      .where(
+        and(
+          eq(accounts.userId, userId),
+          eq(accounts.type, 'credit_card'),
+          isNull(accounts.deletedAt),
+          isNull(creditCards.id) // Only accounts with no linked credit card
+        )
+      );
+  }
+  }

@@ -36,7 +36,7 @@ export const accounts = pgTable('accounts', {
 export const creditCards = pgTable('credit_cards', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id).notNull(),
-  accountId: uuid('account_id').references(() => accounts.id).notNull(),
+  accountId: uuid('account_id').references(() => accounts.id).notNull().unique(),
   cardName: text('card_name').notNull(),
   shortCode: varchar('short_code', { length: 10 }).notNull(),
   bankName: text('bank_name').notNull(),

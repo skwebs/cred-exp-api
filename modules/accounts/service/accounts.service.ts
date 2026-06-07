@@ -31,4 +31,8 @@ export class AccountsService {
     }
     return this.repository.softDelete(id, userId);
   }
-}
+
+  async getAvailableForCard(userId: string) {
+    return this.repository.findAvailableForCard(userId);
+  }
+  }
