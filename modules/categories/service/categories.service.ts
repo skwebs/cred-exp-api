@@ -35,17 +35,23 @@ export class CategoriesService {
   }
 
   async delete(id: string, userId: string) {
-    const category = await this.repository.findById(id, userId);
+    const category = await this.repository.findById(id, userId, true);
     if (!category) {
       throw new AppError('Category not found', 404);
+    }
+    if (category.deletedAt) {
+      throw new AppError('Category is already deleted', 409);
     }
     return this.repository.softDelete(id, userId);
   }
 
   async restore(id: string, userId: string) {
-    const category = await this.repository.findById(id, userId);
+    const category = await this.repository.findById(id, userId, true);
     if (!category) {
       throw new AppError('Category not found', 404);
+    }
+    if (!category.deletedAt) {
+      throw new AppError('Category is already active', 409);
     }
     return this.repository.restore(id, userId);
   }

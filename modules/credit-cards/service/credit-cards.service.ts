@@ -104,17 +104,23 @@ export class CreditCardsService {
   }
 
   async delete(id: string, userId: string) {
-    const card = await this.repository.findById(id, userId);
+    const card = await this.repository.findById(id, userId, true);
     if (!card) {
       throw new AppError('Credit card not found', 404);
+    }
+    if (card.deletedAt) {
+      throw new AppError('Credit card is already deleted', 409);
     }
     return this.repository.softDelete(id, userId);
   }
 
   async restore(id: string, userId: string) {
-    const card = await this.repository.findById(id, userId);
+    const card = await this.repository.findById(id, userId, true);
     if (!card) {
       throw new AppError('Credit card not found', 404);
+    }
+    if (!card.deletedAt) {
+      throw new AppError('Credit card is already active', 409);
     }
     return this.repository.restore(id, userId);
   }

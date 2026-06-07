@@ -98,4 +98,58 @@ describe('CreditCardsService', () => {
       }
     });
   });
+
+  describe('delete (soft delete)', () => {
+    const userId = 'user-1';
+    const cardId = 'card-1';
+
+    it('should soft delete card when it exists and is active', async () => {
+      cardsRepo.findById.mockResolvedValue({ id: cardId, userId, deletedAt: null } as any);
+      cardsRepo.softDelete.mockResolvedValue([{ id: cardId, deletedAt: new Date() }] as any);
+
+      await service.delete(cardId, userId);
+
+      expect(cardsRepo.findById).toHaveBeenCalledWith(cardId, userId, true);
+      expect(cardsRepo.softDelete).toHaveBeenCalledWith(cardId, userId);
+    });
+
+    it('should throw 409 when card is already deleted', async () => {
+      cardsRepo.findById.mockResolvedValue({ id: cardId, userId, deletedAt: new Date() } as any);
+
+      await expect(service.delete(cardId, userId)).rejects.toThrow('Credit card is already deleted');
+    });
+
+    it('should throw 404 when card does not exist', async () => {
+      cardsRepo.findById.mockResolvedValue(null as any);
+
+      await expect(service.delete(cardId, userId)).rejects.toThrow('Credit card not found');
+    });
+  });
+
+  describe('restore', () => {
+    const userId = 'user-1';
+    const cardId = 'card-1';
+
+    it('should restore card when it exists and is deleted', async () => {
+      cardsRepo.findById.mockResolvedValue({ id: cardId, userId, deletedAt: new Date() } as any);
+      cardsRepo.restore.mockResolvedValue([{ id: cardId, deletedAt: null }] as any);
+
+      await service.restore(cardId, userId);
+
+      expect(cardsRepo.findById).toHaveBeenCalledWith(cardId, userId, true);
+      expect(cardsRepo.restore).toHaveBeenCalledWith(cardId, userId);
+    });
+
+    it('should throw 409 when card is already active', async () => {
+      cardsRepo.findById.mockResolvedValue({ id: cardId, userId, deletedAt: null } as any);
+
+      await expect(service.restore(cardId, userId)).rejects.toThrow('Credit card is already active');
+    });
+
+    it('should throw 404 when card does not exist', async () => {
+      cardsRepo.findById.mockResolvedValue(null as any);
+
+      await expect(service.restore(cardId, userId)).rejects.toThrow('Credit card not found');
+    });
+  });
 });

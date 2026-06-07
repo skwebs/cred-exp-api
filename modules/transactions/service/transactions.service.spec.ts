@@ -69,4 +69,56 @@ describe('TransactionsService', () => {
         expect(calledWith.billingCycleId).toBe('cycle-1');
       });
   });
+
+  describe('delete (soft delete)', () => {
+    const txId = 'tx-1';
+
+    it('should soft delete transaction when it exists and is active', async () => {
+      repo.findById.mockResolvedValue({ id: txId, userId, deletedAt: null } as any);
+      repo.softDelete.mockResolvedValue([{ id: txId, deletedAt: new Date() }] as any);
+
+      await service.delete(txId, userId);
+
+      expect(repo.findById).toHaveBeenCalledWith(txId, userId, true);
+      expect(repo.softDelete).toHaveBeenCalledWith(txId, userId);
+    });
+
+    it('should throw 409 when transaction is already deleted', async () => {
+      repo.findById.mockResolvedValue({ id: txId, userId, deletedAt: new Date() } as any);
+
+      await expect(service.delete(txId, userId)).rejects.toThrow('Transaction is already deleted');
+    });
+
+    it('should throw 404 when transaction does not exist', async () => {
+      repo.findById.mockResolvedValue(null as any);
+
+      await expect(service.delete(txId, userId)).rejects.toThrow('Transaction not found');
+    });
+  });
+
+  describe('restore', () => {
+    const txId = 'tx-1';
+
+    it('should restore transaction when it exists and is deleted', async () => {
+      repo.findById.mockResolvedValue({ id: txId, userId, deletedAt: new Date() } as any);
+      repo.restore.mockResolvedValue([{ id: txId, deletedAt: null }] as any);
+
+      await service.restore(txId, userId);
+
+      expect(repo.findById).toHaveBeenCalledWith(txId, userId, true);
+      expect(repo.restore).toHaveBeenCalledWith(txId, userId);
+    });
+
+    it('should throw 409 when transaction is already active', async () => {
+      repo.findById.mockResolvedValue({ id: txId, userId, deletedAt: null } as any);
+
+      await expect(service.restore(txId, userId)).rejects.toThrow('Transaction is already active');
+    });
+
+    it('should throw 404 when transaction does not exist', async () => {
+      repo.findById.mockResolvedValue(null as any);
+
+      await expect(service.restore(txId, userId)).rejects.toThrow('Transaction not found');
+    });
+  });
 });

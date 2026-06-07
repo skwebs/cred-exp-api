@@ -35,17 +35,23 @@ export class AccountsService {
   }
 
   async delete(id: string, userId: string) {
-    const account = await this.repository.findById(id, userId);
+    const account = await this.repository.findById(id, userId, true);
     if (!account) {
       throw new AppError('Account not found', 404);
+    }
+    if (account.deletedAt) {
+      throw new AppError('Account is already deleted', 409);
     }
     return this.repository.softDelete(id, userId);
   }
 
   async restore(id: string, userId: string) {
-    const account = await this.repository.findById(id, userId);
+    const account = await this.repository.findById(id, userId, true);
     if (!account) {
       throw new AppError('Account not found', 404);
+    }
+    if (!account.deletedAt) {
+      throw new AppError('Account is already active', 409);
     }
     return this.repository.restore(id, userId);
   }

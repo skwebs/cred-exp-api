@@ -113,14 +113,24 @@ export class TransactionsService {
   }
 
   async delete(id: string, userId: string) {
-    const transaction = await this.repository.findById(id, userId);
-    if (!transaction) throw new AppError('Transaction not found', 404);
+    const transaction = await this.repository.findById(id, userId, true);
+    if (!transaction) {
+      throw new AppError('Transaction not found', 404);
+    }
+    if (transaction.deletedAt) {
+      throw new AppError('Transaction is already deleted', 409);
+    }
     return this.repository.softDelete(id, userId);
   }
 
   async restore(id: string, userId: string) {
-    const transaction = await this.repository.findById(id, userId);
-    if (!transaction) throw new AppError('Transaction not found', 404);
+    const transaction = await this.repository.findById(id, userId, true);
+    if (!transaction) {
+      throw new AppError('Transaction not found', 404);
+    }
+    if (!transaction.deletedAt) {
+      throw new AppError('Transaction is already active', 409);
+    }
     return this.repository.restore(id, userId);
   }
 
