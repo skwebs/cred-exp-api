@@ -12,8 +12,17 @@ export class AccountsService {
     return this.repository.findAll(userId, query);
   }
 
+  async getById(id: string, userId: string) {
+    const account = await this.repository.findById(id, userId);
+    if (!account) {
+      throw new AppError('Account not found', 404);
+    }
+    return account;
+  }
+
   async create(userId: string, data: any) {
-    return this.repository.create({ ...data, userId });
+    const [account] = await this.repository.create({ ...data, userId });
+    return account;
   }
 
   async update(id: string, userId: string, data: any) {
@@ -21,7 +30,8 @@ export class AccountsService {
     if (!account) {
       throw new AppError('Account not found', 404);
     }
-    return this.repository.update(id, userId, data);
+    const [updatedAccount] = await this.repository.update(id, userId, data);
+    return updatedAccount;
   }
 
   async delete(id: string, userId: string) {
@@ -32,7 +42,23 @@ export class AccountsService {
     return this.repository.softDelete(id, userId);
   }
 
+  async restore(id: string, userId: string) {
+    const account = await this.repository.findById(id, userId);
+    if (!account) {
+      throw new AppError('Account not found', 404);
+    }
+    return this.repository.restore(id, userId);
+  }
+
+  async forceDelete(id: string, userId: string) {
+    const account = await this.repository.findById(id, userId);
+    if (!account) {
+      throw new AppError('Account not found', 404);
+    }
+    return this.repository.hardDelete(id, userId);
+  }
+
   async getAvailableForCard(userId: string) {
     return this.repository.findAvailableForCard(userId);
   }
-  }
+}

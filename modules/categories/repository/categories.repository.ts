@@ -1,14 +1,20 @@
 import { db } from '@/lib/database';
 import { categories } from '@/lib/database/schema';
-import { eq, and, isNull, ilike, sql } from 'drizzle-orm';
+import { eq, and, isNull, isNotNull, ilike, sql } from 'drizzle-orm';
 
 export class CategoriesRepository {
-  async findAll(userId: string, { limit = 10, offset = 0, search = '' }) {
-    const where = and(
-      eq(categories.userId, userId),
-      isNull(categories.deletedAt),
-      search ? ilike(categories.name, `%${search}%`) : undefined
-    );
+  async findAll(userId: string, { limit = 10, offset = 0, search = '', includeDeleted = false, deletedOnly = false }) {
+    let where = eq(categories.userId, userId);
+
+    if (deletedOnly) {
+      where = and(where, isNotNull(categories.deletedAt)) as any;
+    } else if (!includeDeleted) {
+      where = and(where, isNull(categories.deletedAt)) as any;
+    }
+
+    if (search) {
+      where = and(where, ilike(categories.name, `%${search}%`)) as any;
+    }
 
     const data = await db.query.categories.findMany({
       where,
@@ -17,21 +23,25 @@ export class CategoriesRepository {
       orderBy: (categories, { desc }) => [desc(categories.createdAt)],
     });
 
-    const total = await db
+    const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(categories)
       .where(where);
 
-    return { data, total: Number(total[0].count) };
+    const total = Number(totalResult[0].count);
+
+    return { data, total };
   }
 
-  async findById(id: string, userId: string) {
+  async findById(id: string, userId: string, includeDeleted = true) {
+    const where = and(
+      eq(categories.id, id),
+      eq(categories.userId, userId),
+      includeDeleted ? undefined : isNull(categories.deletedAt)
+    );
+
     return await db.query.categories.findFirst({
-      where: and(
-        eq(categories.id, id),
-        eq(categories.userId, userId),
-        isNull(categories.deletedAt)
-      ),
+      where,
     });
   }
 
@@ -51,6 +61,21 @@ export class CategoriesRepository {
     return await db
       .update(categories)
       .set({ deletedAt: new Date() })
+      .where(and(eq(categories.id, id), eq(categories.userId, userId)))
+      .returning();
+  }
+
+  async restore(id: string, userId: string) {
+    return await db
+      .update(categories)
+      .set({ deletedAt: null, updatedAt: new Date() })
+      .where(and(eq(categories.id, id), eq(categories.userId, userId)))
+      .returning();
+  }
+
+  async hardDelete(id: string, userId: string) {
+    return await db
+      .delete(categories)
       .where(and(eq(categories.id, id), eq(categories.userId, userId)))
       .returning();
   }

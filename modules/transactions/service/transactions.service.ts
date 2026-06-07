@@ -19,8 +19,8 @@ export class TransactionsService {
   }
 
   async getAll(userId: string, query: any) {
-    const { limit, offset, ...filters } = query;
-    return this.repository.findAll(userId, { limit, offset, filters });
+    const { limit, offset, includeDeleted, deletedOnly, ...filters } = query;
+    return this.repository.findAll(userId, { limit, offset, filters, includeDeleted, deletedOnly });
   }
 
   async getById(id: string, userId: string) {
@@ -33,9 +33,11 @@ export class TransactionsService {
     const account = await this.accountsRepository.findById(data.accountId, userId);
     if (!account) throw new AppError('Account not found', 404);
 
-    // Business Rules
+    // Business Rule 3: settlement_date assignment
     if (!data.settlementDate) {
-      data.settlementDate = data.transactionDatetime;
+      // Extract date part from transactionDatetime
+      const dt = new Date(data.transactionDatetime);
+      data.settlementDate = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
     }
 
     // Automatic billing cycle assignment
@@ -74,10 +76,39 @@ export class TransactionsService {
   async update(id: string, userId: string, data: any) {
     const transaction = await this.repository.findById(id, userId);
     if (!transaction) throw new AppError('Transaction not found', 404);
-    
-    // Note: Re-calculating billing cycle on update might be complex if account/date changes.
-    // For now, assume simple update.
-    
+
+    // If date changes, we might need to re-assign billing cycle
+    if (data.transactionDatetime && data.transactionDatetime !== transaction.transactionDatetime) {
+       const account = await this.accountsRepository.findById(transaction.accountId, userId);
+       if (account && account.type === 'credit_card') {
+          const creditCard = await this.creditCardsRepository.findByAccountId(account.id, userId);
+          if (creditCard) {
+            const cycleInfo = BillingCycleEngine.calculateCycle(
+              new Date(data.transactionDatetime),
+              parseInt(creditCard.billingDay.toString()),
+              parseInt(creditCard.gracePeriodDays.toString())
+            );
+
+            let billingCycle = await this.billingCyclesRepository.findExisting(
+              creditCard.id,
+              cycleInfo.startDate,
+              cycleInfo.endDate
+            );
+
+            if (!billingCycle) {
+              [billingCycle] = await this.billingCyclesRepository.create({
+                creditCardId: creditCard.id,
+                startDate: cycleInfo.startDate,
+                endDate: cycleInfo.endDate,
+                billDate: cycleInfo.billDate,
+                dueDate: cycleInfo.dueDate,
+              });
+            }
+            data.billingCycleId = billingCycle.id;
+          }
+       }
+    }
+
     return this.repository.update(id, userId, data);
   }
 
@@ -85,5 +116,17 @@ export class TransactionsService {
     const transaction = await this.repository.findById(id, userId);
     if (!transaction) throw new AppError('Transaction not found', 404);
     return this.repository.softDelete(id, userId);
+  }
+
+  async restore(id: string, userId: string) {
+    const transaction = await this.repository.findById(id, userId);
+    if (!transaction) throw new AppError('Transaction not found', 404);
+    return this.repository.restore(id, userId);
+  }
+
+  async forceDelete(id: string, userId: string) {
+    const transaction = await this.repository.findById(id, userId);
+    if (!transaction) throw new AppError('Transaction not found', 404);
+    return this.repository.hardDelete(id, userId);
   }
 }

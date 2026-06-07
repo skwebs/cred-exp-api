@@ -2,6 +2,7 @@ import { TransactionsService } from '@/modules/transactions/service/transactions
 import { handleApiError } from '@/core/errors';
 import { getCurrentUser } from '@/core/auth';
 import { updateTransactionSchema } from '@/modules/transactions/schema/transactions.schema';
+import { ApiResponse } from '@/core/responses';
 
 export async function GET(
   request: Request,
@@ -12,7 +13,7 @@ export async function GET(
     const { userId } = await getCurrentUser();
     const service = new TransactionsService();
     const result = await service.getById(id, userId);
-    return Response.json(result);
+    return ApiResponse.success(result);
   } catch (error) {
     return handleApiError(error);
   }
@@ -34,7 +35,7 @@ export async function PATCH(
       transactionDatetime: validatedData.transactionDatetime ? new Date(validatedData.transactionDatetime) : undefined,
       settlementDate: validatedData.settlementDate ? new Date(validatedData.settlementDate) : undefined,
     });
-    return Response.json(result);
+    return ApiResponse.success(result, 'Transaction updated successfully');
   } catch (error) {
     return handleApiError(error);
   }
@@ -49,7 +50,7 @@ export async function DELETE(
     const { userId } = await getCurrentUser();
     const service = new TransactionsService();
     await service.delete(id, userId);
-    return new Response(null, { status: 204 });
+    return ApiResponse.success(null, 'Transaction soft-deleted successfully');
   } catch (error) {
     return handleApiError(error);
   }

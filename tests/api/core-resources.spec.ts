@@ -24,7 +24,7 @@ describe('Core Resource API Routes', () => {
 
   describe('Accounts', () => {
     it('GET /api/accounts', async () => {
-      (AccountsService.prototype.getAll as jest.Mock).mockResolvedValue([]);
+      (AccountsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
       const request = new Request('http://localhost/api/accounts');
       const response = await getAccounts(request);
       expect(response.status).toBe(200);
@@ -43,8 +43,9 @@ describe('Core Resource API Routes', () => {
 
   describe('Cards', () => {
     it('GET /api/cards', async () => {
-      (CreditCardsService.prototype.getAll as jest.Mock).mockResolvedValue([]);
-      const response = await getCards();
+      (CreditCardsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
+      const request = new Request('http://localhost/api/cards');
+      const response = await getCards(request);
       expect(response.status).toBe(200);
     });
 
@@ -69,7 +70,7 @@ describe('Core Resource API Routes', () => {
 
   describe('Categories', () => {
     it('GET /api/categories', async () => {
-      (CategoriesService.prototype.getAll as jest.Mock).mockResolvedValue([]);
+      (CategoriesService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
       const request = new Request('http://localhost/api/categories');
       const response = await getCategories(request);
       expect(response.status).toBe(200);

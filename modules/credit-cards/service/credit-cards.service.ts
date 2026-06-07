@@ -11,8 +11,8 @@ export class CreditCardsService {
     this.accountsRepository = new AccountsRepository();
   }
 
-  async getAll(userId: string) {
-    return this.repository.findAll(userId);
+  async getAll(userId: string, query: any) {
+    return this.repository.findAll(userId, query);
   }
 
   async getById(id: string, userId: string) {
@@ -61,7 +61,8 @@ export class CreditCardsService {
       );
     }
 
-    return this.repository.create({ ...data, userId });
+    const [card] = await this.repository.create({ ...data, userId });
+    return card;
   }
 
   async update(id: string, userId: string, data: any) {
@@ -71,7 +72,7 @@ export class CreditCardsService {
     }
 
     // If accountId is being updated, we should apply the same business rule.
-    if (data.accountId) {
+    if (data.accountId && data.accountId !== card.accountId) {
       const account = await this.accountsRepository.findById(data.accountId, userId);
       if (!account) {
         throw new AppError('Account not found', 404);
@@ -85,9 +86,21 @@ export class CreditCardsService {
           }
         );
       }
+
+      const existingCard = await this.repository.findByAccountId(data.accountId, userId);
+      if (existingCard && existingCard.id !== id) {
+        throw new AppError(
+          'Credit card already exists for this account.',
+          409,
+          {
+            accountId: ['The selected account is already linked to a credit card.'],
+          }
+        );
+      }
     }
 
-    return this.repository.update(id, userId, data);
+    const [updatedCard] = await this.repository.update(id, userId, data);
+    return updatedCard;
   }
 
   async delete(id: string, userId: string) {
@@ -96,5 +109,21 @@ export class CreditCardsService {
       throw new AppError('Credit card not found', 404);
     }
     return this.repository.softDelete(id, userId);
+  }
+
+  async restore(id: string, userId: string) {
+    const card = await this.repository.findById(id, userId);
+    if (!card) {
+      throw new AppError('Credit card not found', 404);
+    }
+    return this.repository.restore(id, userId);
+  }
+
+  async forceDelete(id: string, userId: string) {
+    const card = await this.repository.findById(id, userId);
+    if (!card) {
+      throw new AppError('Credit card not found', 404);
+    }
+    return this.repository.hardDelete(id, userId);
   }
 }

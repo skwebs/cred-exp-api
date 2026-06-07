@@ -12,8 +12,17 @@ export class CategoriesService {
     return this.repository.findAll(userId, query);
   }
 
+  async getById(id: string, userId: string) {
+    const category = await this.repository.findById(id, userId);
+    if (!category) {
+      throw new AppError('Category not found', 404);
+    }
+    return category;
+  }
+
   async create(userId: string, data: any) {
-    return this.repository.create({ ...data, userId });
+    const [category] = await this.repository.create({ ...data, userId });
+    return category;
   }
 
   async update(id: string, userId: string, data: any) {
@@ -21,7 +30,8 @@ export class CategoriesService {
     if (!category) {
       throw new AppError('Category not found', 404);
     }
-    return this.repository.update(id, userId, data);
+    const [updatedCategory] = await this.repository.update(id, userId, data);
+    return updatedCategory;
   }
 
   async delete(id: string, userId: string) {
@@ -30,5 +40,21 @@ export class CategoriesService {
       throw new AppError('Category not found', 404);
     }
     return this.repository.softDelete(id, userId);
+  }
+
+  async restore(id: string, userId: string) {
+    const category = await this.repository.findById(id, userId);
+    if (!category) {
+      throw new AppError('Category not found', 404);
+    }
+    return this.repository.restore(id, userId);
+  }
+
+  async forceDelete(id: string, userId: string) {
+    const category = await this.repository.findById(id, userId);
+    if (!category) {
+      throw new AppError('Category not found', 404);
+    }
+    return this.repository.hardDelete(id, userId);
   }
 }

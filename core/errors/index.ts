@@ -1,4 +1,5 @@
 import { ZodError } from 'zod';
+import { ApiResponse } from '../responses';
 
 export class AppError extends Error {
   public readonly statusCode: number;
@@ -14,31 +15,17 @@ export class AppError extends Error {
 
 export function handleApiError(error: unknown) {
   if (error instanceof AppError) {
-    return Response.json({
-      success: false,
-      message: error.message,
-      ...(error.errors ? { errors: error.errors } : {}),
-    }, { status: error.statusCode });
+    return ApiResponse.error(error.message, error.statusCode, error.errors);
   }
 
   if (error instanceof ZodError) {
-    const formattedErrors = error.flatten().fieldErrors;
-    return Response.json({
-      success: false,
-      message: 'Validation failed',
-      errors: formattedErrors,
-    }, { status: 400 });
+    const formattedErrors = error.flatten().fieldErrors as Record<string, string[]>;
+    return ApiResponse.validationError(formattedErrors);
   }
 
   if (error instanceof Error) {
-    return Response.json({
-      success: false,
-      message: error.message,
-    }, { status: 500 });
+    return ApiResponse.error(error.message, 500);
   }
 
-  return Response.json({
-    success: false,
-    message: 'Internal Server Error',
-  }, { status: 500 });
+  return ApiResponse.error('Internal Server Error', 500);
 }

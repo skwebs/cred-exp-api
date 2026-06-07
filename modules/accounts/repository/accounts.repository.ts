@@ -1,14 +1,20 @@
 import { db } from '@/lib/database';
 import { accounts } from '@/lib/database/schema';
-import { eq, and, isNull, ilike, sql } from 'drizzle-orm';
+import { eq, and, isNull, isNotNull, ilike, sql } from 'drizzle-orm';
 
 export class AccountsRepository {
-  async findAll(userId: string, { limit = 10, offset = 0, search = '' }) {
-    const where = and(
-      eq(accounts.userId, userId),
-      isNull(accounts.deletedAt),
-      search ? ilike(accounts.name, `%${search}%`) : undefined
-    );
+  async findAll(userId: string, { limit = 10, offset = 0, search = '', includeDeleted = false, deletedOnly = false }) {
+    let where = eq(accounts.userId, userId);
+
+    if (deletedOnly) {
+      where = and(where, isNotNull(accounts.deletedAt)) as any;
+    } else if (!includeDeleted) {
+      where = and(where, isNull(accounts.deletedAt)) as any;
+    }
+
+    if (search) {
+      where = and(where, ilike(accounts.name, `%${search}%`)) as any;
+    }
 
     const data = await db.query.accounts.findMany({
       where,
@@ -17,21 +23,25 @@ export class AccountsRepository {
       orderBy: (accounts, { desc }) => [desc(accounts.createdAt)],
     });
 
-    const total = await db
+    const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(accounts)
       .where(where);
 
-    return { data, total: Number(total[0].count) };
+    const total = Number(totalResult[0].count);
+
+    return { data, total };
   }
 
-  async findById(id: string, userId: string) {
+  async findById(id: string, userId: string, includeDeleted = true) {
+    const where = and(
+      eq(accounts.id, id),
+      eq(accounts.userId, userId),
+      includeDeleted ? undefined : isNull(accounts.deletedAt)
+    );
+
     return await db.query.accounts.findFirst({
-      where: and(
-        eq(accounts.id, id),
-        eq(accounts.userId, userId),
-        isNull(accounts.deletedAt)
-      ),
+      where,
     });
   }
 
@@ -51,6 +61,21 @@ export class AccountsRepository {
     return await db
       .update(accounts)
       .set({ deletedAt: new Date() })
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
+      .returning();
+  }
+
+  async restore(id: string, userId: string) {
+    return await db
+      .update(accounts)
+      .set({ deletedAt: null, updatedAt: new Date() })
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
+      .returning();
+  }
+
+  async hardDelete(id: string, userId: string) {
+    return await db
+      .delete(accounts)
       .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
       .returning();
   }
@@ -77,4 +102,4 @@ export class AccountsRepository {
         )
       );
   }
-  }
+}

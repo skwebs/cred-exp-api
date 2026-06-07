@@ -2,6 +2,7 @@ import { CreditCardsService } from '@/modules/credit-cards/service/credit-cards.
 import { handleApiError } from '@/core/errors';
 import { getCurrentUser } from '@/core/auth';
 import { updateCreditCardSchema } from '@/modules/credit-cards/schema/credit-cards.schema';
+import { ApiResponse } from '@/core/responses';
 
 export async function GET(
   request: Request,
@@ -12,7 +13,7 @@ export async function GET(
     const { userId } = await getCurrentUser();
     const service = new CreditCardsService();
     const result = await service.getById(id, userId);
-    return Response.json(result);
+    return ApiResponse.success(result);
   } catch (error) {
     return handleApiError(error);
   }
@@ -30,7 +31,7 @@ export async function PATCH(
 
     const service = new CreditCardsService();
     const result = await service.update(id, userId, validatedData);
-    return Response.json(result);
+    return ApiResponse.success(result, 'Credit card updated successfully');
   } catch (error) {
     return handleApiError(error);
   }
@@ -45,7 +46,7 @@ export async function DELETE(
     const { userId } = await getCurrentUser();
     const service = new CreditCardsService();
     await service.delete(id, userId);
-    return new Response(null, { status: 204 });
+    return ApiResponse.success(null, 'Credit card soft-deleted successfully');
   } catch (error) {
     return handleApiError(error);
   }

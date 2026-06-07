@@ -46,11 +46,13 @@ export const openApiSpec = {
         summary: 'List categories',
         security: [{ bearerAuth: [] }],
         parameters: [
-          { name: 'limit', in: 'query', schema: { type: 'integer' } },
-          { name: 'offset', in: 'query', schema: { type: 'integer' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
           { name: 'search', in: 'query', schema: { type: 'string' } },
+          { name: 'includeDeleted', in: 'query', schema: { type: 'boolean', default: false } },
+          { name: 'deletedOnly', in: 'query', schema: { type: 'boolean', default: false } },
         ],
-        responses: { 200: { description: 'List of categories' } },
+        responses: { 200: { description: 'List of categories', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
       },
       post: {
         tags: ['Categories'],
@@ -62,12 +64,63 @@ export const openApiSpec = {
         responses: { 201: { description: 'Category created' } },
       },
     },
+    '/categories/{id}': {
+      get: {
+        tags: ['Categories'],
+        summary: 'Get category by ID',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Category details' }, 404: { description: 'Category not found' } },
+      },
+      patch: {
+        tags: ['Categories'],
+        summary: 'Update category',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CategoryRequest' } } },
+        },
+        responses: { 200: { description: 'Category updated' }, 404: { description: 'Category not found' } },
+      },
+      delete: {
+        tags: ['Categories'],
+        summary: 'Soft delete category',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Category soft-deleted' }, 404: { description: 'Category not found' } },
+      },
+    },
+    '/categories/{id}/restore': {
+      patch: {
+        tags: ['Categories'],
+        summary: 'Restore soft-deleted category',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Category restored' }, 404: { description: 'Category not found' } },
+      },
+    },
+    '/categories/{id}/force': {
+      delete: {
+        tags: ['Categories'],
+        summary: 'Permanently delete category',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Category permanently deleted' }, 404: { description: 'Category not found' } },
+      },
+    },
     '/accounts': {
       get: {
         tags: ['Accounts'],
         summary: 'List accounts',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'List of accounts' } },
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'search', in: 'query', schema: { type: 'string' } },
+          { name: 'includeDeleted', in: 'query', schema: { type: 'boolean', default: false } },
+          { name: 'deletedOnly', in: 'query', schema: { type: 'boolean', default: false } },
+        ],
+        responses: { 200: { description: 'List of accounts', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
       },
       post: {
         tags: ['Accounts'],
@@ -79,13 +132,48 @@ export const openApiSpec = {
         responses: { 201: { description: 'Account created' } },
       },
     },
-    '/accounts/available-for-card': {
+    '/accounts/{id}': {
       get: {
         tags: ['Accounts'],
-        summary: 'List accounts available for credit card link',
-        description: 'Returns accounts of type "credit_card" that are not yet linked to any credit card detail.',
+        summary: 'Get account by ID',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'List of available accounts' } },
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Account details' }, 404: { description: 'Account not found' } },
+      },
+      patch: {
+        tags: ['Accounts'],
+        summary: 'Update account',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/AccountRequest' } } },
+        },
+        responses: { 200: { description: 'Account updated' }, 404: { description: 'Account not found' } },
+      },
+      delete: {
+        tags: ['Accounts'],
+        summary: 'Soft delete account',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Account soft-deleted' }, 404: { description: 'Account not found' } },
+      },
+    },
+    '/accounts/{id}/restore': {
+      patch: {
+        tags: ['Accounts'],
+        summary: 'Restore soft-deleted account',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Account restored' }, 404: { description: 'Account not found' } },
+      },
+    },
+    '/accounts/{id}/force': {
+      delete: {
+        tags: ['Accounts'],
+        summary: 'Permanently delete account',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Account permanently deleted' }, 404: { description: 'Account not found' } },
       },
     },
     '/cards': {
@@ -93,7 +181,13 @@ export const openApiSpec = {
         tags: ['Credit Cards'],
         summary: 'List credit cards',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'List of cards' } },
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'includeDeleted', in: 'query', schema: { type: 'boolean', default: false } },
+          { name: 'deletedOnly', in: 'query', schema: { type: 'boolean', default: false } },
+        ],
+        responses: { 200: { description: 'List of cards', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
       },
       post: {
         tags: ['Credit Cards'],
@@ -104,19 +198,54 @@ export const openApiSpec = {
         },
         responses: { 
           201: { description: 'Card created' },
-          400: { 
-            description: 'Validation failed or invalid account type',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
-          },
-          404: { 
-            description: 'Account not found',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
-          },
-          409: { 
-            description: 'Credit card already exists for this account',
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
-          }
+          400: { description: 'Validation failed or invalid account type' },
+          404: { description: 'Account not found' },
+          409: { description: 'Credit card already exists for this account' }
         },
+      },
+    },
+    '/cards/{id}': {
+      get: {
+        tags: ['Credit Cards'],
+        summary: 'Get credit card by ID',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Card details' }, 404: { description: 'Card not found' } },
+      },
+      patch: {
+        tags: ['Credit Cards'],
+        summary: 'Update credit card',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CardRequest' } } },
+        },
+        responses: { 200: { description: 'Card updated' }, 404: { description: 'Card not found' } },
+      },
+      delete: {
+        tags: ['Credit Cards'],
+        summary: 'Soft delete credit card',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Card soft-deleted' }, 404: { description: 'Card not found' } },
+      },
+    },
+    '/cards/{id}/restore': {
+      patch: {
+        tags: ['Credit Cards'],
+        summary: 'Restore soft-deleted credit card',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Card restored' }, 404: { description: 'Card not found' } },
+      },
+    },
+    '/cards/{id}/force': {
+      delete: {
+        tags: ['Credit Cards'],
+        summary: 'Permanently delete credit card',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Card permanently deleted' }, 404: { description: 'Card not found' } },
       },
     },
     '/transactions': {
@@ -124,7 +253,15 @@ export const openApiSpec = {
         tags: ['Transactions'],
         summary: 'List transactions',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'List of transactions' } },
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'accountId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          { name: 'categoryId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          { name: 'includeDeleted', in: 'query', schema: { type: 'boolean', default: false } },
+          { name: 'deletedOnly', in: 'query', schema: { type: 'boolean', default: false } },
+        ],
+        responses: { 200: { description: 'List of transactions', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
       },
       post: {
         tags: ['Transactions'],
@@ -136,47 +273,48 @@ export const openApiSpec = {
         responses: { 201: { description: 'Transaction created' } },
       },
     },
-    '/reports/transactions': {
+    '/transactions/{id}': {
       get: {
-        tags: ['Reports'],
-        summary: 'Transaction timeline report',
+        tags: ['Transactions'],
+        summary: 'Get transaction by ID',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'Timeline report' } },
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Transaction details' }, 404: { description: 'Transaction not found' } },
       },
-    },
-    '/dashboard/monthly': {
-      get: {
-        tags: ['Dashboard'],
-        summary: 'Monthly dashboard summary',
+      patch: {
+        tags: ['Transactions'],
+        summary: 'Update transaction',
         security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'Monthly summary' } },
-      },
-    },
-    '/bills/upcoming': {
-      get: {
-        tags: ['Bills'],
-        summary: 'Upcoming credit card bills',
-        security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'List of upcoming bills' } },
-      },
-    },
-    '/bills/history': {
-      get: {
-        tags: ['Bills'],
-        summary: 'Billing cycle history',
-        security: [{ bearerAuth: [] }],
-        responses: { 200: { description: 'Bill history' } },
-      },
-    },
-    '/bills/pay': {
-      post: {
-        tags: ['Bills'],
-        summary: 'Pay a credit card bill',
-        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         requestBody: {
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/PaymentRequest' } } },
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/TransactionRequest' } } },
         },
-        responses: { 201: { description: 'Payment successful' } },
+        responses: { 200: { description: 'Transaction updated' }, 404: { description: 'Transaction not found' } },
+      },
+      delete: {
+        tags: ['Transactions'],
+        summary: 'Soft delete transaction',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Transaction soft-deleted' }, 404: { description: 'Transaction not found' } },
+      },
+    },
+    '/transactions/{id}/restore': {
+      patch: {
+        tags: ['Transactions'],
+        summary: 'Restore soft-deleted transaction',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Transaction restored' }, 404: { description: 'Transaction not found' } },
+      },
+    },
+    '/transactions/{id}/force': {
+      delete: {
+        tags: ['Transactions'],
+        summary: 'Permanently delete transaction',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Transaction permanently deleted' }, 404: { description: 'Transaction not found' } },
       },
     },
   },
@@ -252,15 +390,28 @@ export const openApiSpec = {
           notes: { type: 'string' },
         },
       },
-      PaymentRequest: {
+      SuccessResponse: {
         type: 'object',
-        required: ['sourceAccountId', 'creditCardId', 'billingCycleId', 'amount', 'transactionDatetime'],
         properties: {
-          sourceAccountId: { type: 'string', format: 'uuid' },
-          creditCardId: { type: 'string', format: 'uuid' },
-          billingCycleId: { type: 'string', format: 'uuid' },
-          amount: { type: 'number' },
-          transactionDatetime: { type: 'string', format: 'date-time' },
+          success: { type: 'boolean', example: true },
+          message: { type: 'string' },
+          data: { type: 'object' },
+        },
+      },
+      ListResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          data: { type: 'array', items: { type: 'object' } },
+          pagination: {
+            type: 'object',
+            properties: {
+              page: { type: 'integer' },
+              limit: { type: 'integer' },
+              total: { type: 'integer' },
+              hasNext: { type: 'boolean' },
+            },
+          },
         },
       },
       ErrorResponse: {

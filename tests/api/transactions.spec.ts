@@ -21,7 +21,7 @@ describe('Transactions and Payments API Routes', () => {
 
   describe('Transactions', () => {
     it('GET /api/transactions', async () => {
-      (TransactionsService.prototype.getAll as jest.Mock).mockResolvedValue([]);
+      (TransactionsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
       const request = new Request('http://localhost/api/transactions');
       const response = await getTransactions(request);
       expect(response.status).toBe(200);
