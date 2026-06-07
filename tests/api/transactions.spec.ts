@@ -1,4 +1,5 @@
 import { GET as getTransactions, POST as postTransactions } from '@/app/api/transactions/route';
+import { GET as getDeletedTransactions } from '@/app/api/transactions/deleted/route';
 import { POST as postPay } from '@/app/api/bills/pay/route';
 import { TransactionsService } from '@/modules/transactions/service/transactions.service';
 import { PaymentsService } from '@/modules/transactions/service/payments.service';
@@ -41,6 +42,14 @@ describe('Transactions and Payments API Routes', () => {
       });
       const response = await postTransactions(request);
       expect(response.status).toBe(201);
+    });
+
+    it('GET /api/transactions/deleted', async () => {
+      (TransactionsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
+      const request = new Request('http://localhost/api/transactions/deleted');
+      const response = await getDeletedTransactions(request);
+      expect(response.status).toBe(200);
+      expect(TransactionsService.prototype.getAll).toHaveBeenCalledWith('user-1', expect.objectContaining({ deletedOnly: true }));
     });
   });
 

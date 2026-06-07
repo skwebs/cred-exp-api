@@ -64,6 +64,19 @@ export const openApiSpec = {
         responses: { 201: { description: 'Category created' } },
       },
     },
+    '/categories/deleted': {
+      get: {
+        tags: ['Categories'],
+        summary: 'List soft-deleted categories',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'search', in: 'query', schema: { type: 'string' } },
+        ],
+        responses: { 200: { description: 'List of soft-deleted categories', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
+      },
+    },
     '/categories/{id}': {
       get: {
         tags: ['Categories'],
@@ -87,7 +100,7 @@ export const openApiSpec = {
         summary: 'Soft delete category',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Category soft-deleted' }, 404: { description: 'Category not found' } },
+        responses: { 200: { description: 'Category soft-deleted' }, 404: { description: 'Category not found' }, 409: { description: 'Category already deleted' } },
       },
     },
     '/categories/{id}/restore': {
@@ -96,7 +109,7 @@ export const openApiSpec = {
         summary: 'Restore soft-deleted category',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Category restored' }, 404: { description: 'Category not found' } },
+        responses: { 200: { description: 'Category restored' }, 404: { description: 'Category not found' }, 409: { description: 'Category already active' } },
       },
     },
     '/categories/{id}/force': {
@@ -132,6 +145,19 @@ export const openApiSpec = {
         responses: { 201: { description: 'Account created' } },
       },
     },
+    '/accounts/deleted': {
+      get: {
+        tags: ['Accounts'],
+        summary: 'List soft-deleted accounts',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'search', in: 'query', schema: { type: 'string' } },
+        ],
+        responses: { 200: { description: 'List of soft-deleted accounts', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
+      },
+    },
     '/accounts/{id}': {
       get: {
         tags: ['Accounts'],
@@ -155,7 +181,7 @@ export const openApiSpec = {
         summary: 'Soft delete account',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Account soft-deleted' }, 404: { description: 'Account not found' } },
+        responses: { 200: { description: 'Account soft-deleted' }, 404: { description: 'Account not found' }, 409: { description: 'Account already deleted' } },
       },
     },
     '/accounts/{id}/restore': {
@@ -164,7 +190,7 @@ export const openApiSpec = {
         summary: 'Restore soft-deleted account',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Account restored' }, 404: { description: 'Account not found' } },
+        responses: { 200: { description: 'Account restored' }, 404: { description: 'Account not found' }, 409: { description: 'Account already active' } },
       },
     },
     '/accounts/{id}/force': {
@@ -204,6 +230,18 @@ export const openApiSpec = {
         },
       },
     },
+    '/cards/deleted': {
+      get: {
+        tags: ['Credit Cards'],
+        summary: 'List soft-deleted credit cards',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+        ],
+        responses: { 200: { description: 'List of soft-deleted cards', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
+      },
+    },
     '/cards/{id}': {
       get: {
         tags: ['Credit Cards'],
@@ -227,7 +265,7 @@ export const openApiSpec = {
         summary: 'Soft delete credit card',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Card soft-deleted' }, 404: { description: 'Card not found' } },
+        responses: { 200: { description: 'Card soft-deleted' }, 404: { description: 'Card not found' }, 409: { description: 'Credit card already deleted' } },
       },
     },
     '/cards/{id}/restore': {
@@ -236,7 +274,7 @@ export const openApiSpec = {
         summary: 'Restore soft-deleted credit card',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Card restored' }, 404: { description: 'Card not found' } },
+        responses: { 200: { description: 'Card restored' }, 404: { description: 'Card not found' }, 409: { description: 'Credit card already active' } },
       },
     },
     '/cards/{id}/force': {
@@ -273,6 +311,20 @@ export const openApiSpec = {
         responses: { 201: { description: 'Transaction created' } },
       },
     },
+    '/transactions/deleted': {
+      get: {
+        tags: ['Transactions'],
+        summary: 'List soft-deleted transactions',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+          { name: 'accountId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          { name: 'categoryId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { 200: { description: 'List of soft-deleted transactions', content: { 'application/json': { schema: { $ref: '#/components/schemas/ListResponse' } } } } },
+      },
+    },
     '/transactions/{id}': {
       get: {
         tags: ['Transactions'],
@@ -296,7 +348,7 @@ export const openApiSpec = {
         summary: 'Soft delete transaction',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Transaction soft-deleted' }, 404: { description: 'Transaction not found' } },
+        responses: { 200: { description: 'Transaction soft-deleted' }, 404: { description: 'Transaction not found' }, 409: { description: 'Transaction already deleted' } },
       },
     },
     '/transactions/{id}/restore': {
@@ -305,7 +357,7 @@ export const openApiSpec = {
         summary: 'Restore soft-deleted transaction',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { 200: { description: 'Transaction restored' }, 404: { description: 'Transaction not found' } },
+        responses: { 200: { description: 'Transaction restored' }, 404: { description: 'Transaction not found' }, 409: { description: 'Transaction already active' } },
       },
     },
     '/transactions/{id}/force': {

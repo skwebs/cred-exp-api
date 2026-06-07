@@ -1,6 +1,9 @@
 import { GET as getAccounts, POST as postAccounts } from '@/app/api/accounts/route';
+import { GET as getDeletedAccounts } from '@/app/api/accounts/deleted/route';
 import { GET as getCards, POST as postCards } from '@/app/api/cards/route';
+import { GET as getDeletedCards } from '@/app/api/cards/deleted/route';
 import { GET as getCategories, POST as postCategories } from '@/app/api/categories/route';
+import { GET as getDeletedCategories } from '@/app/api/categories/deleted/route';
 import { AccountsService } from '@/modules/accounts/service/accounts.service';
 import { CreditCardsService } from '@/modules/credit-cards/service/credit-cards.service';
 import { CategoriesService } from '@/modules/categories/service/categories.service';
@@ -39,6 +42,14 @@ describe('Core Resource API Routes', () => {
       const response = await postAccounts(request);
       expect(response.status).toBe(201);
     });
+
+    it('GET /api/accounts/deleted', async () => {
+      (AccountsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
+      const request = new Request('http://localhost/api/accounts/deleted');
+      const response = await getDeletedAccounts(request);
+      expect(response.status).toBe(200);
+      expect(AccountsService.prototype.getAll).toHaveBeenCalledWith('user-1', expect.objectContaining({ deletedOnly: true }));
+    });
   });
 
   describe('Cards', () => {
@@ -66,6 +77,14 @@ describe('Core Resource API Routes', () => {
       const response = await postCards(request);
       expect(response.status).toBe(201);
     });
+
+    it('GET /api/cards/deleted', async () => {
+      (CreditCardsService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
+      const request = new Request('http://localhost/api/cards/deleted');
+      const response = await getDeletedCards(request);
+      expect(response.status).toBe(200);
+      expect(CreditCardsService.prototype.getAll).toHaveBeenCalledWith('user-1', expect.objectContaining({ deletedOnly: true }));
+    });
   });
 
   describe('Categories', () => {
@@ -84,6 +103,14 @@ describe('Core Resource API Routes', () => {
       });
       const response = await postCategories(request);
       expect(response.status).toBe(201);
+    });
+
+    it('GET /api/categories/deleted', async () => {
+      (CategoriesService.prototype.getAll as jest.Mock).mockResolvedValue({ data: [], total: 0 });
+      const request = new Request('http://localhost/api/categories/deleted');
+      const response = await getDeletedCategories(request);
+      expect(response.status).toBe(200);
+      expect(CategoriesService.prototype.getAll).toHaveBeenCalledWith('user-1', expect.objectContaining({ deletedOnly: true }));
     });
   });
 });
